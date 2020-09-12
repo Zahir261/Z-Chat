@@ -1,12 +1,12 @@
-package com.zahir.zchat.activities;
+package com.a2z.zchat.activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
 
-import com.zahir.zchat.R;
-import com.zahir.zchat.managers.SharedPreferenceManager;
+import com.a2z.zchat.R;
+import com.a2z.zchat.managers.SharedPreferenceManager;
 
 public class MainActivity extends AppCompatActivity {
 

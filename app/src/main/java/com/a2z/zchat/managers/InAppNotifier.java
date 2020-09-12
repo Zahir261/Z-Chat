@@ -1,4 +1,4 @@
-package com.zahir.zchat.managers;
+package com.a2z.zchat.managers;
 
 import android.content.Context;
 import android.util.Log;

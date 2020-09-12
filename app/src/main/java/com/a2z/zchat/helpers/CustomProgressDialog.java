@@ -1,13 +1,12 @@
-package com.zahir.zchat.helpers;
+package com.a2z.zchat.helpers;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
 
-import com.zahir.zchat.R;
+import com.a2z.zchat.R;
 
 public class CustomProgressDialog {
     private AlertDialog alertDialog;

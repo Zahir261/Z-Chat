@@ -1,4 +1,4 @@
-package com.zahir.zchat.constants;
+package com.a2z.zchat.constants;
 
 public class AppConstants {
     public static final String spName = "zchat_sp";

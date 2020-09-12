@@ -1,4 +1,4 @@
-package com.zahir.zchat.managers;
+package com.a2z.zchat.managers;
 
 import android.content.Context;
 import android.text.TextUtils;
@@ -9,7 +9,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.zahir.zchat.helpers.InputStreamVolleyRequest;
+import com.a2z.zchat.helpers.InputStreamVolleyRequest;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -1,9 +1,9 @@
-package com.zahir.zchat.managers;
+package com.a2z.zchat.managers;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import com.zahir.zchat.constants.AppConstants;
+import com.a2z.zchat.constants.AppConstants;
 
 public class SharedPreferenceManager {
     private SharedPreferences sharedPreferences;

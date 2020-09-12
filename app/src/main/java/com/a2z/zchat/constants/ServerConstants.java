@@ -1,4 +1,4 @@
-package com.zahir.zchat.constants;
+package com.a2z.zchat.constants;
 
 public class ServerConstants {
     public static final String ROOT_URL = "https://192.168.1.182/Z-Chat-Scripts/php/ui/";

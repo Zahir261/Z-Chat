@@ -1,4 +1,4 @@
-package com.zahir.zchat;
+package com.a2z.zchat;
 
 import android.content.Context;
 

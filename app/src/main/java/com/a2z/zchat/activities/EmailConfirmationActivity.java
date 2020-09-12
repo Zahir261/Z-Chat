@@ -1,4 +1,4 @@
-package com.zahir.zchat.activities;
+package com.a2z.zchat.activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -14,13 +14,13 @@ import android.widget.TextView;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.google.android.material.textfield.TextInputEditText;
-import com.zahir.zchat.R;
-import com.zahir.zchat.constants.AppConstants;
-import com.zahir.zchat.constants.ServerConstants;
-import com.zahir.zchat.helpers.CustomProgressDialog;
-import com.zahir.zchat.helpers.NukeSSLCerts;
-import com.zahir.zchat.managers.AppManager;
-import com.zahir.zchat.managers.SharedPreferenceManager;
+import com.a2z.zchat.R;
+import com.a2z.zchat.constants.AppConstants;
+import com.a2z.zchat.constants.ServerConstants;
+import com.a2z.zchat.helpers.CustomProgressDialog;
+import com.a2z.zchat.helpers.NukeSSLCerts;
+import com.a2z.zchat.managers.AppManager;
+import com.a2z.zchat.managers.SharedPreferenceManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;

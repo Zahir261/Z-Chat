@@ -1,4 +1,4 @@
-package com.zahir.zchat.helpers;
+package com.a2z.zchat.helpers;
 
 import com.android.volley.NetworkResponse;
 import com.android.volley.Request;

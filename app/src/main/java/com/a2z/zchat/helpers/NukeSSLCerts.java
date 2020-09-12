@@ -1,4 +1,4 @@
-    package com.zahir.zchat.helpers;
+    package com.a2z.zchat.helpers;
 
     import java.security.SecureRandom;
     import java.security.cert.X509Certificate;

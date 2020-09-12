@@ -1,7 +1,6 @@
-package com.zahir.zchat.managers;
+package com.a2z.zchat.managers;
 
 import android.app.Application;
-import android.content.Context;
 
 public class AppManager extends Application {
 
