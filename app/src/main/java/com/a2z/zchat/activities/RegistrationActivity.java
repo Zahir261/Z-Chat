@@ -234,9 +234,9 @@ public class RegistrationActivity extends AppCompatActivity {
                                if(object.getInt(AppConstants.User.ID) > 0) {
                                    progressDialog.dismissDialog();
                                    Intent intent = new Intent(RegistrationActivity.this, EmailConfirmationActivity.class);
-                                   intent.putExtra("user_id", object.getInt(AppConstants.User.ID));
-                                   intent.putExtra("mail_sent", false); //false because the token is just generated
+                                   intent.putExtra("resend_flag", false); //false because the token is just generated
                                    intent.putExtra("email", etEmail.getText().toString());
+                                   intent.putExtra("user_verification_mode", true);
                                    startActivity(intent);
                                    finish();
                                }else{

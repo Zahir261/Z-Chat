@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
 public class LoginActivity extends AppCompatActivity {
 
     private TextInputEditText etEmail, etPassword;
-    private Button btnLogin, btnSignUp;
+    private Button btnLogin, btnSignUp, btnForgotPassword;
     private TextView tvEmailErrorMessage, tvPasswordErrorMessage;
     private LinearLayout llEmail, llPassword;
     private String email, password;
@@ -48,6 +48,7 @@ public class LoginActivity extends AppCompatActivity {
         etPassword = findViewById(R.id.login_password_et);
         btnLogin = findViewById(R.id.login_login_btn);
         btnSignUp = findViewById(R.id.login_sign_up_btn);
+        btnForgotPassword = findViewById(R.id.login_forgot_password_btn);
 
         llEmail = findViewById(R.id.login_email_error_ll);
         llPassword = findViewById(R.id.login_password_error_ll);
@@ -78,6 +79,17 @@ public class LoginActivity extends AppCompatActivity {
                 }
             }
         });
+
+        btnForgotPassword.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(LoginActivity.this, ForgotPasswordActivity.class);
+                intent.putExtra("forgot_password", true);
+                intent.putExtra("change_password", false);
+                intent.putExtra("mail_sent", false);
+                startActivity(intent);
+            }
+        });
     }
 
     private void proceedToLogin() {
@@ -97,13 +109,14 @@ public class LoginActivity extends AppCompatActivity {
                             if (object.getInt("verified") == 1) {
                                 SharedPreferenceManager sharedPreferenceManager = new SharedPreferenceManager(getApplicationContext());
                                 sharedPreferenceManager.setLoginStatus(true);
-                                sharedPreferenceManager.saveUserId(String.valueOf(object.getInt(AppConstants.User.ID)));
+                                sharedPreferenceManager.setUserId(String.valueOf(object.getInt(AppConstants.User.ID)));
+                                sharedPreferenceManager.setUserEmail(email);
                                 startActivity(new Intent(LoginActivity.this, ChatActivity.class));
                             }else{
                                 Intent intent = new Intent(LoginActivity.this, EmailConfirmationActivity.class);
-                                intent.putExtra("user_id", object.getInt(AppConstants.User.ID));
                                 intent.putExtra("email", object.getString(AppConstants.User.EMAIL));
-                                intent.putExtra("mail_sent", true);
+                                intent.putExtra("resend_flag", true);
+                                intent.putExtra("user_verification_mode", true);
                                 startActivity(intent);
                                 finish();
                             }

@@ -16,6 +16,7 @@ public class AppConstants {
 
     public class SharedPref{
         public static final String USER_ID = "logged_user_id";
+        public static final String USER_EMAIL = "logged_user_email";
         public static final String LOG_IN_STATUS = "login_flag";
     }
 }

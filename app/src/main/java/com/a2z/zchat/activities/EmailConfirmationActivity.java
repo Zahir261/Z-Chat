@@ -11,6 +11,8 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.a2z.zchat.helpers.Validator;
+import com.a2z.zchat.managers.SharedPreferenceManager;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.google.android.material.textfield.TextInputEditText;
@@ -20,7 +22,6 @@ import com.a2z.zchat.constants.ServerConstants;
 import com.a2z.zchat.helpers.CustomProgressDialog;
 import com.a2z.zchat.helpers.NukeSSLCerts;
 import com.a2z.zchat.managers.AppManager;
-import com.a2z.zchat.managers.SharedPreferenceManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -33,9 +34,8 @@ public class EmailConfirmationActivity extends AppCompatActivity {
     private Button btnConfirm, btnResendCode;
     private TextView tvMessage;
     private LinearLayout llConfirmation;
-    private int userId;
-    private String token, email;
-    private boolean mailAlreadySent, isConfirmationCounterRunning = false, isResendCounterRunning = false, mailNeedToSend;
+    private String email;
+    private boolean mailShouldBeSent, isConfirmationCounterRunning = false, isResendCounterRunning = false, userVerificationMode = false;
     private CountDownTimer confirmationCounter, resendCounter;
 
     @Override
@@ -53,9 +53,11 @@ public class EmailConfirmationActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         if(intent != null){
-            userId = intent.getIntExtra("user_id", 0);
-            mailAlreadySent = intent.getBooleanExtra("mail_sent", false); //(false: send first mail, true: already sent once and the token expired, now resend) -> it is to determine if token needs to be updated
+            mailShouldBeSent = intent.getBooleanExtra("resend_flag", false); //(false: send first mail, true: already sent once and the token expired, now resend) -> it is to determine if token needs to be updated
             email = intent.getStringExtra("email");
+            if (intent.hasExtra("user_verification_mode")){
+                userVerificationMode = intent.getBooleanExtra("user_verification_mode", false);
+            }
         }
 
         confirmationCounter = new CountDownTimer(300000, 1000) {
@@ -94,30 +96,45 @@ public class EmailConfirmationActivity extends AppCompatActivity {
         btnConfirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if(Validator.isNullOrEmpty(etConfirmationCode.getText().toString())){
+                    AppManager.getAppManager().getInAppNotifier().showToast("Please enter confirmation code.");
+                    return;
+                }
                 HashMap<String, String> map = new HashMap<>();
-                map.put(AppConstants.User.ID, String.valueOf(userId));
+                map.put(AppConstants.User.EMAIL, email);
                 map.put(AppConstants.User.TOKEN, etConfirmationCode.getText().toString());
+                map.put("user_verification", String.valueOf(userVerificationMode));
                 final CustomProgressDialog progressDialog = new CustomProgressDialog(EmailConfirmationActivity.this);
+                progressDialog.showProgressDialog("Confirming User...");
                 AppManager.getAppManager().getAppNetworkManager().makeRequest(ServerConstants.CONFIRM_EMAIL_URL, new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
                         try {
-                            progressDialog.showProgressDialog("Confirming User...");
                             JSONObject object = new JSONObject(response);
                             if(!object.getBoolean("error")){
                                 if(object.getBoolean("token_exists")){
-                                    if(object.getBoolean("verification_status_updated")){
-                                        progressDialog.dismissDialog();
-                                        AppManager.getAppManager().getInAppNotifier().showToast("Your account was successfully verified.");
-                                        SharedPreferenceManager spManager = new SharedPreferenceManager(getApplicationContext());
-                                        spManager.saveUserId(String.valueOf(userId));
-                                        spManager.setLoginStatus(true);
-                                        stopCounters();
-                                        startActivity(new Intent(EmailConfirmationActivity.this, ChatActivity.class));
-                                        finish();
+                                    if(userVerificationMode){
+                                        if(object.getBoolean("verification_status_updated")){
+                                            progressDialog.dismissDialog();
+                                            AppManager.getAppManager().getInAppNotifier().showToast("Your account was successfully verified.");
+                                            SharedPreferenceManager spManager = new SharedPreferenceManager(getApplicationContext());
+                                            spManager.setUserId(String.valueOf(object.getInt(AppConstants.User.ID)));
+                                            spManager.setLoginStatus(true);
+                                            stopCounters();
+                                            startActivity(new Intent(EmailConfirmationActivity.this, ChatActivity.class));
+                                            finish();
+                                        }else{
+                                            progressDialog.dismissDialog();
+                                            AppManager.getAppManager().getInAppNotifier().showToast("Something went wrong. Please try again.");
+                                        }
                                     }else{
-                                        progressDialog.dismissDialog();
-                                        AppManager.getAppManager().getInAppNotifier().showToast("Something went wrong. Please try again.");
+                                        Intent intent = new Intent(EmailConfirmationActivity.this, ForgotPasswordActivity.class);
+                                        intent.putExtra("forgot_password", true);
+                                        intent.putExtra("change_password", false);
+                                        intent.putExtra("mail_sent", true);
+                                        intent.putExtra("email", email);
+                                        startActivity(intent);
+                                        finish();
                                     }
                                 }else{
                                     progressDialog.dismissDialog();
@@ -142,7 +159,7 @@ public class EmailConfirmationActivity extends AppCompatActivity {
         btnResendCode.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mailAlreadySent = true;
+                mailShouldBeSent = true;
                 sendConfirmationCode();
             }
         });
@@ -168,8 +185,7 @@ public class EmailConfirmationActivity extends AppCompatActivity {
     private void sendConfirmationCode() {
         final CustomProgressDialog progressDialog = new CustomProgressDialog(EmailConfirmationActivity.this);
         HashMap<String, String> map = new HashMap<>();
-        map.put(AppConstants.User.ID, String.valueOf(userId));
-        map.put("resend_flag", String.valueOf(mailAlreadySent));
+        map.put("resend_flag", String.valueOf(mailShouldBeSent));
         map.put(AppConstants.User.EMAIL, email);
         AppManager.getAppManager().getInAppNotifier().log("map", map.toString());
         progressDialog.showProgressDialog("Please Wait...");
@@ -185,7 +201,7 @@ public class EmailConfirmationActivity extends AppCompatActivity {
                             resetCounters();
                             btnResendCode.setEnabled(false);
                             llConfirmation.setVisibility(View.VISIBLE);
-                            if(mailAlreadySent){
+                            if(mailShouldBeSent){
                                 tvMessage.setText("Verification code was resent to your email. Enter code to confirm.");
                             }else{
                                 tvMessage.setText("Verification code was sent to your email. Enter code to confirm.");

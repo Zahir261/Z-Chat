@@ -7,4 +7,5 @@ public class ServerConstants {
     public static final String SEND_CODE_URL = ROOT_URL + "send_code.php";
     public final static String CONFIRM_EMAIL_URL = ROOT_URL + "confirm_email.php";
     public final static String LOG_IN_URL = ROOT_URL + "login_user.php";
+    public final static String UPDATE_PASSWORD_URL = ROOT_URL + "update_password.php";
 }

@@ -17,10 +17,21 @@ public class SharedPreferenceManager {
         return sharedPreferences.getBoolean(AppConstants.SharedPref.LOG_IN_STATUS, false);
     }
 
-    public void saveUserId(String userId){
+    public String getSavedEmail(){
+        return sharedPreferences.getString(AppConstants.SharedPref.USER_EMAIL, "");
+    }
+
+    public void setUserId(String userId){
         spEditor = sharedPreferences.edit();
 
         spEditor.putString(AppConstants.SharedPref.USER_ID, userId);
+        spEditor.apply();
+    }
+
+    public void setUserEmail(String email){
+        spEditor = sharedPreferences.edit();
+
+        spEditor.putString(AppConstants.SharedPref.USER_EMAIL, email);
         spEditor.apply();
     }
 
