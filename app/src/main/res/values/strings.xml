@@ -1,3 +1,35 @@
 <resources>
     <string name="app_name">Z-Chat</string>
+    <string name="eceResendButtonText">Resend Code</string>
+    <string name="eceEmailResentText">Verification code was resent to your email. Enter code to confirm.</string>
+    <string name="eceEmailSentText">Verification code was sent to your email. Enter code to confirm.</string>
+    <string name="eceCodeExpireMessage">Confirmation code was expired. Press RESEND CODE to send the code again.</string>
+    <string name="requireEmailText">Please fill in the email.</string>
+    <string name="requirePassText">Please fill in the password.</string>
+    <string name="requireValidEmailText">Please enter a valid email address.</string>
+    <string name="validPassLengthText">Password must be at least 8 characters.</string>
+    <string name="fpeRequireCurrentPassText">Current password is required.</string>
+    <string name="fpeRequireNewPassText">New password is required.</string>
+    <string name="requireConfirmPassText">Please fill in the confirm password.</string>
+    <string name="passMatchText">Passwords don\'t match.</string>
+    <string name="userExistsMessage">User already exists with this email. Please use a different email.</string>
+    <string name="requireNameText">Please fill in both name.</string>
+    <string name="let_s_chat">Let\'s Chat</string>
+    <string name="logOutBtn">Log Out</string>
+    <string name="changPassBtn">Change Password</string>
+    <string name="verifyEmailMessage">Enter the confirmation code sent to your email to verify it\'s you</string>
+    <string name="confirmation_code">Confirmation Code</string>
+    <string name="dummyText">Dummy Text</string>
+    <string name="confirmBtn">Confirm</string>
+    <string name="resendCodeBtn">Resend Code</string>
+    <string name="passChangeBtn">Password Change</string>
+    <string name="currentPassText">Current Password</string>
+    <string name="newPassText">New Password</string>
+    <string name="confirmPassText">Confirm Password</string>
+    <string name="changePassText">Change Password</string>
+    <string name="emailText">Email</string>
+    <string name="sendCodeBtn">Send Verification Code</string>
+    <string name="continueWithGoogleBtn">Continue with Google</string>
+    <string name="logInBtn">Log In</string>
+
 </resources>

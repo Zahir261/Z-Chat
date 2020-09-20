@@ -1,15 +1,16 @@
 package com.a2z.zchat.activities;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import com.android.volley.Response;
@@ -25,22 +26,15 @@ import com.a2z.zchat.managers.AppManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.regex.Pattern;
+import java.util.Objects;
 
 public class RegistrationActivity extends AppCompatActivity {
 
     private String firstName, lastName, email, password, confirmPassword;
-    private List<String> errorMessages = new ArrayList<>();
-    private int genderId = 0;
     private TextInputEditText etFirstName, etLastName, etEmail, etPassword, etConfirmPassword;
-    private Button btnSignUp, btnLogin;
     private TextView tvNameErrorMessages, tvEmailErrorMessage, tvPasswordErrorMessage, tvConfirmPasswordErrorMessage;
     private LinearLayout llName, llEmail, llPassword, llConfirmPassword;
-    private RadioGroup rgGender;
     private boolean userExistFlag = true;
 
     @Override
@@ -54,7 +48,6 @@ public class RegistrationActivity extends AppCompatActivity {
         etEmail = findViewById(R.id.reg_email_et);
         etPassword = findViewById(R.id.reg_password_et);
         etConfirmPassword = findViewById(R.id.reg_confirm_password_et);
-        rgGender = findViewById(R.id.reg_gender_rg);
 
         llName = findViewById(R.id.reg_name_error_ll);
         llEmail = findViewById(R.id.reg_email_error_ll);
@@ -66,8 +59,8 @@ public class RegistrationActivity extends AppCompatActivity {
         tvPasswordErrorMessage = findViewById(R.id.reg_password_error_messages_tv);
         tvConfirmPasswordErrorMessage = findViewById(R.id.reg_confirm_password_error_messages_tv);
 
-        btnSignUp = findViewById(R.id.reg_sign_up_btn);
-        btnLogin = findViewById(R.id.reg_login_btn);
+        Button btnSignUp = findViewById(R.id.reg_sign_up_btn);
+        Button btnLogin = findViewById(R.id.reg_login_btn);
 
         etFirstName.addTextChangedListener(new ValidationTextWatcher(etFirstName));
         etLastName.addTextChangedListener(new ValidationTextWatcher(etLastName));
@@ -75,27 +68,12 @@ public class RegistrationActivity extends AppCompatActivity {
         etPassword.addTextChangedListener(new ValidationTextWatcher(etPassword));
         etConfirmPassword.addTextChangedListener(new ValidationTextWatcher(etConfirmPassword));
 
-        rgGender.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-                switch (checkedId){
-                    case R.id.reg_male_rb:
-                        genderId = 1;
-                        break;
-                    case R.id.reg_female_rb:
-                        genderId = 2;
-                        break;
-                    default:
-                        break;
-                }
-            }
-        });
-
         etEmail.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 if(!hasFocus){
-                    if (emailIsValid(etEmail.getText().toString())) {
+                    if (Validator.isEmailValid(Objects.requireNonNull(etEmail.getText()).toString())) {
                         HashMap<String, String> map = new HashMap<>();
                         map.put(AppConstants.User.EMAIL, etEmail.getText().toString());
                         AppManager.getAppManager().getAppNetworkManager().makeRequest(ServerConstants.CHECK_USER_EXISTENCE_URL, new Response.Listener<String>() {
@@ -105,7 +83,7 @@ public class RegistrationActivity extends AppCompatActivity {
                                     JSONObject object = new JSONObject(response);
                                     if(!object.getBoolean("error")){
                                         if(object.getBoolean("user_exists")){
-                                            tvEmailErrorMessage.setText("User already exists with this email. Please use a different email.");
+                                            tvEmailErrorMessage.setText(R.string.userExistsMessage);
                                             llEmail.setVisibility(View.VISIBLE);
                                             userExistFlag = true;
                                         }else {
@@ -129,13 +107,14 @@ public class RegistrationActivity extends AppCompatActivity {
         });
 
         btnSignUp.setOnClickListener(new View.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
             @Override
             public void onClick(View v) {
-                firstName = etFirstName.getText().toString().trim();
-                lastName = etLastName.getText().toString().trim();
-                email = etEmail.getText().toString().trim();
-                password = etPassword.getText().toString();
-                confirmPassword = etConfirmPassword.getText().toString();
+                firstName = Objects.requireNonNull(etFirstName.getText()).toString().trim();
+                lastName = Objects.requireNonNull(etLastName.getText()).toString().trim();
+                email = Objects.requireNonNull(etEmail.getText()).toString().trim();
+                password = Objects.requireNonNull(etPassword.getText()).toString();
+                confirmPassword = Objects.requireNonNull(etConfirmPassword.getText()).toString();
 
                 if(!hasErrorInput()){
                     proceedToSignUp();
@@ -154,50 +133,51 @@ public class RegistrationActivity extends AppCompatActivity {
         });
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private boolean hasErrorInput() {
         boolean flag = false;
 
         if(Validator.isNullOrEmpty(firstName)){
-            tvNameErrorMessages.setText("Please fill in both name.");
+            tvNameErrorMessages.setText(R.string.requireNameText);
             llName.setVisibility(View.VISIBLE);
             flag = true;
         }
 
         if (Validator.isNullOrEmpty(lastName)) {
-            tvNameErrorMessages.setText("Please fill in both name.");
+            tvNameErrorMessages.setText(R.string.requireNameText);
             llName.setVisibility(View.VISIBLE);
             flag = true;
         }
 
         if(Validator.isNullOrEmpty(email)){
-            tvEmailErrorMessage.setText("Please fill in the email.");
+            tvEmailErrorMessage.setText(R.string.requireEmailText);
             llEmail.setVisibility(View.VISIBLE);
             flag = true;
         }
 
         if(!Validator.isNullOrEmpty(email)){
-            if(!emailIsValid(etEmail.getText().toString())){
-                tvEmailErrorMessage.setText("Please enter a valid email address.");
+            if(!Validator.isEmailValid(Objects.requireNonNull(etEmail.getText()).toString())){
+                tvEmailErrorMessage.setText(R.string.requireValidEmailText);
                 llEmail.setVisibility(View.VISIBLE);
                 flag = true;
             }
         }
 
         if(Validator.isNullOrEmpty(password)){
-            tvPasswordErrorMessage.setText("Please fill in the password.");
+            tvPasswordErrorMessage.setText(R.string.requirePassText);
             llPassword.setVisibility(View.VISIBLE);
             flag = true;
         }
 
         if(!Validator.isNullOrEmpty(password)){
             if(password.length() <8){
-                tvPasswordErrorMessage.setText("Password must be at least 8 characters.");
+                tvPasswordErrorMessage.setText(R.string.validPassLengthText);
                 llPassword.setVisibility(View.VISIBLE);
             }
         }
 
         if(Validator.isNullOrEmpty(confirmPassword)){
-            tvConfirmPasswordErrorMessage.setText("Please fill in the confirm password.");
+            tvConfirmPasswordErrorMessage.setText(R.string.requireConfirmPassText);
             llConfirmPassword.setVisibility(View.VISIBLE);
             flag = true;
         }
@@ -205,7 +185,7 @@ public class RegistrationActivity extends AppCompatActivity {
         if(!Validator.isNullOrEmpty(password) && !Validator.isNullOrEmpty(confirmPassword)){
             if (!password.equals(confirmPassword)){
                 llConfirmPassword.setVisibility(View.VISIBLE);
-                tvConfirmPasswordErrorMessage.setText("Passwords don't match.");
+                tvConfirmPasswordErrorMessage.setText(R.string.passMatchText);
                 flag = true;
             }
         }
@@ -222,10 +202,11 @@ public class RegistrationActivity extends AppCompatActivity {
         map.put(AppConstants.User.LAST_NAME, lastName);
         map.put(AppConstants.User.EMAIL, email);
         map.put(AppConstants.User.PASSPHRASE, password);
-        map.put(AppConstants.User.GENDER_ID, String.valueOf(genderId));
+        map.put(AppConstants.User.VERIFIED, String.valueOf(0));
         final CustomProgressDialog progressDialog = new CustomProgressDialog(RegistrationActivity.this);
         progressDialog.showProgressDialog("Registering User...");
         AppManager.getAppManager().getAppNetworkManager().makeRequest(ServerConstants.USER_REG_URL, new Response.Listener<String>() {
+                    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
                     @Override
                     public void onResponse(String response) {
                         try {
@@ -235,7 +216,7 @@ public class RegistrationActivity extends AppCompatActivity {
                                    progressDialog.dismissDialog();
                                    Intent intent = new Intent(RegistrationActivity.this, EmailConfirmationActivity.class);
                                    intent.putExtra("resend_flag", false); //false because the token is just generated
-                                   intent.putExtra("email", etEmail.getText().toString());
+                                   intent.putExtra("email", Objects.requireNonNull(etEmail.getText()).toString());
                                    intent.putExtra("user_verification_mode", true);
                                    startActivity(intent);
                                    finish();
@@ -272,10 +253,11 @@ public class RegistrationActivity extends AppCompatActivity {
         public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
         }
 
+        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
         public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
             switch(view.getId()){
                 case R.id.reg_email_et:
-                    validateEmail(etEmail.getText().toString());
+                    validateEmail(Objects.requireNonNull(etEmail.getText()).toString());
                     break;
                 case R.id.reg_password_et:
                     validatePasswordLength();
@@ -298,48 +280,45 @@ public class RegistrationActivity extends AppCompatActivity {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void validateNames() {
-        if((etFirstName.getText().toString().length() == 0 && etLastName.getText().toString().length() == 0) ||
-                (etFirstName.getText().toString().length() > 0 && etLastName.getText().toString().length() > 0)){
+        if((Objects.requireNonNull(etFirstName.getText()).toString().length() == 0 && Objects.requireNonNull(etLastName.getText()).toString().length() == 0) ||
+                (etFirstName.getText().toString().length() > 0 && Objects.requireNonNull(etLastName.getText()).toString().length() > 0)){
             llName.setVisibility(View.GONE);
         }else{
-            tvNameErrorMessages.setText("Please fill in both name.");
+            tvNameErrorMessages.setText(R.string.requireNameText);
             llName.setVisibility(View.VISIBLE);
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void validateConfirmPassword() {
-        if(etPassword.getText().toString().equals(etConfirmPassword.getText().toString()) || etConfirmPassword.getText().toString().length()==0){
+        if(Objects.requireNonNull(etPassword.getText()).toString().equals(Objects.requireNonNull(etConfirmPassword.getText()).toString()) || (etConfirmPassword.getText().toString().length() == 0)){
             llConfirmPassword.setVisibility(View.GONE);
         }else{
             llConfirmPassword.setVisibility(View.VISIBLE);
-            tvConfirmPasswordErrorMessage.setText("Passwords don't match.");
+            tvConfirmPasswordErrorMessage.setText(R.string.passMatchText);
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void validatePasswordLength() {
-        String enteredPassword = etPassword.getText().toString();
+        String enteredPassword = Objects.requireNonNull(etPassword.getText()).toString();
         if(enteredPassword.length() == 0 || enteredPassword.length()>=8){
             llPassword.setVisibility(View.GONE);
         }else{
-            tvPasswordErrorMessage.setText("Password must be at least 8 characters.");
+            tvPasswordErrorMessage.setText(R.string.validPassLengthText);
             llPassword.setVisibility(View.VISIBLE);
         }
     }
 
     private void validateEmail(String enteredEmail) {
 
-        if(emailIsValid(enteredEmail) || etEmail.length() == 0){
+        if(Validator.isEmailValid(enteredEmail) || etEmail.length() == 0){
             llEmail.setVisibility(View.GONE);
         }else{
-            tvEmailErrorMessage.setText("Please enter a valid email address.");
+            tvEmailErrorMessage.setText(R.string.requireValidEmailText);
             llEmail.setVisibility(View.VISIBLE);
         }
-    }
-
-    private boolean emailIsValid(String enteredEmail){
-        String emailRegExp = "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])";
-        Pattern pattern = Pattern.compile(emailRegExp);
-        return pattern.matcher(enteredEmail).matches();
     }
 }

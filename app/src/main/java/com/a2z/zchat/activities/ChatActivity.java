@@ -8,13 +8,14 @@ import android.view.View;
 import android.widget.Button;
 
 import com.a2z.zchat.R;
+import com.a2z.zchat.helpers.GoogleSignInHelper;
 import com.a2z.zchat.helpers.NukeSSLCerts;
 import com.a2z.zchat.managers.SharedPreferenceManager;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
 
 public class ChatActivity extends AppCompatActivity {
-
-    private Button btnLogout, btnChangePass;
     private SharedPreferenceManager sharedPreferenceManager;
+    private GoogleSignInHelper googleSignInHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,8 +25,10 @@ public class ChatActivity extends AppCompatActivity {
         NukeSSLCerts.nuke();
         sharedPreferenceManager = new SharedPreferenceManager(getApplicationContext());
 
-        btnLogout = findViewById(R.id.chat_logout_btn);
-        btnChangePass = findViewById(R.id.chat_change_pass_btn);
+        Button btnLogout = findViewById(R.id.chat_logout_btn);
+        Button btnChangePass = findViewById(R.id.chat_change_pass_btn);
+        googleSignInHelper = new GoogleSignInHelper(this);
+        googleSignInHelper.connect();
 
 
         btnLogout.setOnClickListener(new View.OnClickListener() {
@@ -34,6 +37,9 @@ public class ChatActivity extends AppCompatActivity {
                 SharedPreferenceManager spManager = new SharedPreferenceManager(getApplicationContext());
                 spManager.clearData();
                 spManager.setLoginStatus(false);
+                if (GoogleSignIn.getLastSignedInAccount(getApplicationContext()) != null){
+                    googleSignInHelper.signOut();
+                }
                 startActivity(new Intent(ChatActivity.this, LoginActivity.class));
                 finishAffinity();
             }

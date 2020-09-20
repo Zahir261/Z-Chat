@@ -1,8 +1,10 @@
 package com.a2z.zchat.activities;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -27,18 +29,16 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
-import java.util.regex.Pattern;
+import java.util.Objects;
 
 public class ForgotPasswordActivity extends AppCompatActivity {
 
-    private boolean forgotPasswordModeEnabled, changePasswordModeEnabled, emailSent;
-    private LinearLayout llSendToken, llPassword;
+    private boolean forgotPasswordModeEnabled;
+    private boolean changePasswordModeEnabled;
     private TextInputEditText etOldPassword, etNewPassword, etConfirmPassword, etEmail;
-    private Button btnSendToken, btnChangePassword;
     private String email;
     private LinearLayout llOldPasswordError, llNewPasswordError, llConfirmPasswordError, llEmailError;
     private TextView tvOldPasswordErrorMessage, tvNewPasswordErrorMessage, tvConfirmPasswordErrorMessage, tvEmailErrorMessage;
-    private TextInputLayout tilOldPassword;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,8 +47,8 @@ public class ForgotPasswordActivity extends AppCompatActivity {
 
         NukeSSLCerts.nuke();
 
-        llPassword = findViewById(R.id.fp_change_password_ll);
-        llSendToken = findViewById(R.id.fp_send_token_layout);
+        LinearLayout llPassword = findViewById(R.id.fp_change_password_ll);
+        LinearLayout llSendToken = findViewById(R.id.fp_send_token_layout);
         llOldPasswordError = findViewById(R.id.fp_old_password_error_ll);
         llNewPasswordError = findViewById(R.id.fp_new_password_error_ll);
         llConfirmPasswordError = findViewById(R.id.fp_confirm_password_error_ll);
@@ -59,20 +59,20 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         etConfirmPassword = findViewById(R.id.fp_confirm_password_et);
         etEmail = findViewById(R.id.fp_email_et);
 
-        tilOldPassword = findViewById(R.id.fp_old_password_til);
+        TextInputLayout tilOldPassword = findViewById(R.id.fp_old_password_til);
 
         tvOldPasswordErrorMessage = findViewById(R.id.fp_old_password_error_messages_tv);
         tvNewPasswordErrorMessage = findViewById(R.id.fp_new_password_error_messages_tv);
         tvConfirmPasswordErrorMessage = findViewById(R.id.fp_confirm_password_error_messages_tv);
         tvEmailErrorMessage = findViewById(R.id.fp_email_error_messages_tv);
 
-        btnSendToken = findViewById(R.id.fp_send_token_btn);
-        btnChangePassword = findViewById(R.id.fp_change_password_btn);
+        Button btnSendToken = findViewById(R.id.fp_send_token_btn);
+        Button btnChangePassword = findViewById(R.id.fp_change_password_btn);
 
         Intent intent = getIntent();
         forgotPasswordModeEnabled = intent.getBooleanExtra("forgot_password", false);
         changePasswordModeEnabled = intent.getBooleanExtra("change_password", false);
-        emailSent = intent.getBooleanExtra("mail_sent", false);
+        boolean emailSent = intent.getBooleanExtra("mail_sent", false);
         if(intent.hasExtra("email")){
             email = intent.getStringExtra("email");
         }
@@ -92,9 +92,10 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         etEmail.addTextChangedListener(new ValidationTextWatcher(etEmail));
 
         btnSendToken.setOnClickListener(new View.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
             @Override
             public void onClick(View v) {
-                if(!emailIsValid(etEmail.getText().toString())){
+                if(!Validator.isEmailValid(Objects.requireNonNull(etEmail.getText()).toString())){
                     AppManager.getAppManager().getInAppNotifier().showToast("Input error exists.");
                     return;
                 }
@@ -107,6 +108,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         });
 
         btnChangePassword.setOnClickListener(new View.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
             @Override
             public void onClick(View v) {
                 if(hasInputError()){
@@ -115,11 +117,11 @@ public class ForgotPasswordActivity extends AppCompatActivity {
                 }
                 HashMap<String, String> map = new HashMap<>();
                 map.put(AppConstants.User.EMAIL, email);
-                map.put("new_passphrase", etNewPassword.getText().toString());
+                map.put("new_passphrase", Objects.requireNonNull(etNewPassword.getText()).toString());
                 if(forgotPasswordModeEnabled){
                     map.put("mode", "forgot");
                 }else if(changePasswordModeEnabled){
-                    map.put("old_passphrase", etOldPassword.getText().toString());
+                    map.put("old_passphrase", Objects.requireNonNull(etOldPassword.getText()).toString());
                     map.put("mode", "change");
                 }
                 final CustomProgressDialog progressDialog = new CustomProgressDialog(ForgotPasswordActivity.this);
@@ -161,45 +163,47 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         });
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private boolean hasInputError() {
         boolean flag = false;
         if(changePasswordModeEnabled){
-            if(Validator.isNullOrEmpty(etOldPassword.getText().toString())){
-                tvOldPasswordErrorMessage.setText("Old password is required.");
+            if(Validator.isNullOrEmpty(Objects.requireNonNull(etOldPassword.getText()).toString())){
+                tvOldPasswordErrorMessage.setText(R.string.fpeRequireCurrentPassText);
                 llOldPasswordError.setVisibility(View.VISIBLE);
                 flag = true;
             }
         }
-        if(Validator.isNullOrEmpty(etNewPassword.getText().toString())){
-            tvNewPasswordErrorMessage.setText("New password is required.");
+        if(Validator.isNullOrEmpty(Objects.requireNonNull(etNewPassword.getText()).toString())){
+            tvNewPasswordErrorMessage.setText(R.string.fpeRequireNewPassText);
             llNewPasswordError.setVisibility(View.VISIBLE);
             flag = true;
         }
 
-        if(Validator.isNullOrEmpty(etConfirmPassword.getText().toString())){
-            tvConfirmPasswordErrorMessage.setText("Please fill in the confirm password.");
+        if(Validator.isNullOrEmpty(Objects.requireNonNull(etConfirmPassword.getText()).toString())){
+            tvConfirmPasswordErrorMessage.setText(R.string.requireConfirmPassText);
             llConfirmPasswordError.setVisibility(View.VISIBLE);
             flag = true;
         }
 
-        if(!Validator.isNullOrEmpty(etOldPassword.getText().toString())){
+        if(!Validator.isNullOrEmpty(Objects.requireNonNull(etOldPassword.getText()).toString())){
             if(etOldPassword.length() <8){
-                tvOldPasswordErrorMessage.setText("Password must be at least 8 characters.");
+                tvOldPasswordErrorMessage.setText(R.string.validPassLengthText);
                 llOldPasswordError.setVisibility(View.VISIBLE);
             }
         }
 
         if(!Validator.isNullOrEmpty(etNewPassword.getText().toString())){
             if(etNewPassword.length() <8){
-                tvNewPasswordErrorMessage.setText("Password must be at least 8 characters.");
+                tvNewPasswordErrorMessage.setText(R.string.validPassLengthText);
                 llNewPasswordError.setVisibility(View.VISIBLE);
+                flag = true;
             }
         }
 
         if(!Validator.isNullOrEmpty(etNewPassword.getText().toString()) && !Validator.isNullOrEmpty(etConfirmPassword.getText().toString())){
             if (!etNewPassword.getText().toString().equals(etConfirmPassword.getText().toString())){
                 llConfirmPasswordError.setVisibility(View.VISIBLE);
-                tvConfirmPasswordErrorMessage.setText("Passwords don't match.");
+                tvConfirmPasswordErrorMessage.setText(R.string.passMatchText);
                 flag = true;
             }
         }
@@ -217,6 +221,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
         }
 
+        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
         public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
             switch(view.getId()){
                 case R.id.fp_old_password_et:
@@ -229,7 +234,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
                     validateConfirmPassword();
                     break;
                 case R.id.fp_email_et:
-                    validateEmail(etEmail.getText().toString());
+                    validateEmail(Objects.requireNonNull(etEmail.getText()).toString());
                     break;
                 default:
                     break;
@@ -241,48 +246,45 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void validateConfirmPassword() {
-        if(etNewPassword.getText().toString().equals(etConfirmPassword.getText().toString()) || etConfirmPassword.getText().toString().length()==0){
+        if(Objects.requireNonNull(etNewPassword.getText()).toString().equals(Objects.requireNonNull(etConfirmPassword.getText()).toString()) || etConfirmPassword.getText().toString().length()==0){
             llConfirmPasswordError.setVisibility(View.GONE);
         }else{
             llConfirmPasswordError.setVisibility(View.VISIBLE);
-            tvConfirmPasswordErrorMessage.setText("Passwords don't match.");
+            tvConfirmPasswordErrorMessage.setText(R.string.passMatchText);
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void validateOldPasswordLength() {
-        String enteredPassword = etOldPassword.getText().toString();
+        String enteredPassword = Objects.requireNonNull(etOldPassword.getText()).toString();
         if(enteredPassword.length() == 0 || enteredPassword.length()>=8){
             llOldPasswordError.setVisibility(View.GONE);
         }else{
-            tvOldPasswordErrorMessage.setText("Password must be at least 8 characters.");
+            tvOldPasswordErrorMessage.setText(R.string.validPassLengthText);
             llOldPasswordError.setVisibility(View.VISIBLE);
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void validateNewPasswordLength() {
-        String enteredPassword = etNewPassword.getText().toString();
+        String enteredPassword = Objects.requireNonNull(etNewPassword.getText()).toString();
         if(enteredPassword.length() == 0 || enteredPassword.length()>=8){
             llNewPasswordError.setVisibility(View.GONE);
         }else{
-            tvNewPasswordErrorMessage.setText("Password must be at least 8 characters.");
+            tvNewPasswordErrorMessage.setText(R.string.validPassLengthText);
             llNewPasswordError.setVisibility(View.VISIBLE);
         }
     }
 
     private void validateEmail(String enteredEmail) {
 
-        if(emailIsValid(enteredEmail) || etEmail.length() == 0){
+        if(Validator.isEmailValid(enteredEmail) || etEmail.length() == 0){
             llEmailError.setVisibility(View.GONE);
         }else{
-            tvEmailErrorMessage.setText("Please enter a valid email address.");
+            tvEmailErrorMessage.setText(R.string.requireValidEmailText);
             llEmailError.setVisibility(View.VISIBLE);
         }
-    }
-
-    private boolean emailIsValid(String enteredEmail){
-        String emailRegExp = "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])";
-        Pattern pattern = Pattern.compile(emailRegExp);
-        return pattern.matcher(enteredEmail).matches();
     }
 }

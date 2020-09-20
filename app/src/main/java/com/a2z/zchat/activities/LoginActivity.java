@@ -1,8 +1,11 @@
 package com.a2z.zchat.activities;
 
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -11,8 +14,10 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.a2z.zchat.helpers.GoogleSignInHelper;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.material.textfield.TextInputEditText;
 import com.a2z.zchat.R;
 import com.a2z.zchat.constants.AppConstants;
@@ -22,21 +27,21 @@ import com.a2z.zchat.helpers.NukeSSLCerts;
 import com.a2z.zchat.helpers.Validator;
 import com.a2z.zchat.managers.AppManager;
 import com.a2z.zchat.managers.SharedPreferenceManager;
+import com.shobhitpuri.custombuttons.GoogleSignInButton;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
-import java.util.regex.Pattern;
+import java.util.Objects;
 
-public class LoginActivity extends AppCompatActivity {
+public class LoginActivity extends AppCompatActivity implements GoogleSignInHelper.OnGoogleSignInListener {
 
     private TextInputEditText etEmail, etPassword;
-    private Button btnLogin, btnSignUp, btnForgotPassword;
     private TextView tvEmailErrorMessage, tvPasswordErrorMessage;
     private LinearLayout llEmail, llPassword;
     private String email, password;
-
+    private GoogleSignInHelper googleSignInHelper;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,11 +49,14 @@ public class LoginActivity extends AppCompatActivity {
 
         NukeSSLCerts.nuke();
 
+        googleSignInHelper = new GoogleSignInHelper(this, this);
+        googleSignInHelper.connect();
+
         etEmail = findViewById(R.id.login_email_et);
         etPassword = findViewById(R.id.login_password_et);
-        btnLogin = findViewById(R.id.login_login_btn);
-        btnSignUp = findViewById(R.id.login_sign_up_btn);
-        btnForgotPassword = findViewById(R.id.login_forgot_password_btn);
+        Button btnLogin = findViewById(R.id.login_login_btn);
+        Button btnSignUp = findViewById(R.id.login_sign_up_btn);
+        Button btnForgotPassword = findViewById(R.id.login_forgot_password_btn);
 
         llEmail = findViewById(R.id.login_email_error_ll);
         llPassword = findViewById(R.id.login_password_error_ll);
@@ -68,10 +76,11 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         btnLogin.setOnClickListener(new View.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
             @Override
             public void onClick(View v) {
-                email = etEmail.getText().toString();
-                password = etPassword.getText().toString();
+                email = Objects.requireNonNull(etEmail.getText()).toString();
+                password = Objects.requireNonNull(etPassword.getText()).toString();
                 if(!hasInputError()){
                     proceedToLogin();
                 }else{
@@ -90,6 +99,21 @@ public class LoginActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        GoogleSignInButton googleSignInButton = findViewById(R.id.login_google_sign_in_button);
+        googleSignInButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                googleSignInHelper.signIn();
+            }
+        });
+
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        googleSignInHelper.onStart();
     }
 
     private void proceedToLogin() {
@@ -118,8 +142,8 @@ public class LoginActivity extends AppCompatActivity {
                                 intent.putExtra("resend_flag", true);
                                 intent.putExtra("user_verification_mode", true);
                                 startActivity(intent);
-                                finish();
                             }
+                            finish();
                         }else{
                            AppManager.getAppManager().getInAppNotifier().showToast("Email or password is not correct.");
                         }
@@ -145,20 +169,20 @@ public class LoginActivity extends AppCompatActivity {
         boolean flag = false;
 
         if(Validator.isNullOrEmpty(email)){
-            tvEmailErrorMessage.setText("Please fill in the email.");
+            tvEmailErrorMessage.setText(R.string.requireEmailText);
             llEmail.setVisibility(View.VISIBLE);
             flag = true;
         }
 
         if(Validator.isNullOrEmpty(password)){
-            tvPasswordErrorMessage.setText("Please fill in the password.");
+            tvPasswordErrorMessage.setText(R.string.requirePassText);
             llPassword.setVisibility(View.VISIBLE);
             flag = true;
         }
 
         if(!Validator.isNullOrEmpty(email)){
-            if(!emailIsValid(email)){
-                tvEmailErrorMessage.setText("Please enter a valid email address.");
+            if(!Validator.isEmailValid(email)){
+                tvEmailErrorMessage.setText(R.string.requireValidEmailText);
                 llEmail.setVisibility(View.VISIBLE);
                 flag = true;
             }
@@ -166,7 +190,7 @@ public class LoginActivity extends AppCompatActivity {
 
         if(!Validator.isNullOrEmpty(password)){
             if(password.length() < 8){
-                tvPasswordErrorMessage.setText("Password must be at least 8 characters.");
+                tvPasswordErrorMessage.setText(R.string.validPassLengthText);
                 llPassword.setVisibility(View.VISIBLE);
                 flag = true;
             }
@@ -175,30 +199,73 @@ public class LoginActivity extends AppCompatActivity {
         return flag;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void validatePassword() {
-        String enteredPassword = etPassword.getText().toString();
+        String enteredPassword = Objects.requireNonNull(etPassword.getText()).toString();
         if(enteredPassword.length() == 0 || enteredPassword.length()>=8){
             llPassword.setVisibility(View.GONE);
         }else{
-            tvPasswordErrorMessage.setText("Password must be at least 8 characters.");
+            tvPasswordErrorMessage.setText(R.string.validPassLengthText);
             llPassword.setVisibility(View.VISIBLE);
         }
     }
 
     private void validateEmail(String enteredEmail) {
 
-        if(emailIsValid(enteredEmail) || etEmail.length() == 0){
+        if(Validator.isEmailValid(enteredEmail) || etEmail.length() == 0){
             llEmail.setVisibility(View.GONE);
         }else{
-            tvEmailErrorMessage.setText("Please enter a valid email address.");
+            tvEmailErrorMessage.setText(R.string.requireValidEmailText);
             llEmail.setVisibility(View.VISIBLE);
         }
     }
 
-    private boolean emailIsValid(String enteredEmail){
-        String emailRegExp = "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])";
-        Pattern pattern = Pattern.compile(emailRegExp);
-        return pattern.matcher(enteredEmail).matches();
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        googleSignInHelper.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    public void OnGSignInSuccess(final GoogleSignInAccount googleSignInAccount) {
+        final SharedPreferenceManager spManager = new SharedPreferenceManager(getApplicationContext());
+        HashMap<String, String> map = new HashMap<>();
+        map.put(AppConstants.User.EMAIL, googleSignInAccount.getEmail());
+        final CustomProgressDialog progressDialog = new CustomProgressDialog(this);
+        progressDialog.showProgressDialog("Signing In...");
+        AppManager.getAppManager().getAppNetworkManager().makeRequest(ServerConstants.GET_USER_ID_URL, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                progressDialog.dismissDialog();
+                try {
+                    JSONObject object = new JSONObject(response);
+                    if(!object.getBoolean("error")){
+                        if(object.getBoolean("email_exists")){
+                            spManager.setLoginStatus(true);
+                            spManager.setUserEmail(googleSignInAccount.getEmail());
+                            spManager.setUserId(String.valueOf(object.getInt(AppConstants.User.ID)));
+                            startActivity(new Intent(LoginActivity.this, ChatActivity.class));
+                            finish();
+                        }else{
+                            startActivity(new Intent(LoginActivity.this, PasswordForSocialLoginActivity.class));
+                        }
+                    }
+                } catch (JSONException e) {
+                    progressDialog.dismissDialog();
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                progressDialog.dismissDialog();
+            }
+        }, map);
+    }
+
+    @Override
+    public void OnGSignInError(String error) {
+        AppManager.getAppManager().getInAppNotifier().showToast("Error in signing in. Try again.");
     }
 
     private class ValidationTextWatcher implements TextWatcher {
@@ -212,10 +279,11 @@ public class LoginActivity extends AppCompatActivity {
         public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
         }
 
+        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
         public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
             switch(view.getId()){
                 case R.id.login_email_et:
-                    validateEmail(etEmail.getText().toString());
+                    validateEmail(Objects.requireNonNull(etEmail.getText()).toString());
                     break;
                 case R.id.login_password_et:
                     validatePassword();

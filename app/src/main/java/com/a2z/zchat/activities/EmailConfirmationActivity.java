@@ -1,9 +1,11 @@
 package com.a2z.zchat.activities;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.view.View;
@@ -27,6 +29,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
+import java.util.Objects;
 
 public class EmailConfirmationActivity extends AppCompatActivity {
 
@@ -63,13 +66,13 @@ public class EmailConfirmationActivity extends AppCompatActivity {
         confirmationCounter = new CountDownTimer(300000, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
-                btnConfirm.setText("Confirm " + formatTime(millisUntilFinished/1000));
+                btnConfirm.setText(String.format("Confirm %s", formatTime(millisUntilFinished / 1000)));
                 isConfirmationCounterRunning = true;
             }
 
             @Override
             public void onFinish() {
-                tvMessage.setText("Confirmation code was expired. Press RESEND CODE to send the code again.");
+                tvMessage.setText(R.string.eceCodeExpireMessage);
                 llConfirmation.setVisibility(View.GONE);
                 isConfirmationCounterRunning = false;
             }
@@ -78,14 +81,14 @@ public class EmailConfirmationActivity extends AppCompatActivity {
         resendCounter = new CountDownTimer(180000, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
-                btnResendCode.setText("RESEND CODE " + formatTime(millisUntilFinished/1000));
+                btnResendCode.setText(String.format("Resend Code %s", formatTime(millisUntilFinished / 1000)));
                 isResendCounterRunning = true;
             }
 
             @Override
             public void onFinish() {
                 btnResendCode.setEnabled(true);
-                btnResendCode.setText("Resend Code");
+                btnResendCode.setText(R.string.eceResendButtonText);
                 btnResendCode.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.colorAccent));
                 isResendCounterRunning = false;
             }
@@ -94,9 +97,10 @@ public class EmailConfirmationActivity extends AppCompatActivity {
         sendConfirmationCode();
 
         btnConfirm.setOnClickListener(new View.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
             @Override
             public void onClick(View v) {
-                if(Validator.isNullOrEmpty(etConfirmationCode.getText().toString())){
+                if(Validator.isNullOrEmpty(Objects.requireNonNull(etConfirmationCode.getText()).toString())){
                     AppManager.getAppManager().getInAppNotifier().showToast("Please enter confirmation code.");
                     return;
                 }
@@ -202,9 +206,9 @@ public class EmailConfirmationActivity extends AppCompatActivity {
                             btnResendCode.setEnabled(false);
                             llConfirmation.setVisibility(View.VISIBLE);
                             if(mailShouldBeSent){
-                                tvMessage.setText("Verification code was resent to your email. Enter code to confirm.");
+                                tvMessage.setText(R.string.eceEmailResentText);
                             }else{
-                                tvMessage.setText("Verification code was sent to your email. Enter code to confirm.");
+                                tvMessage.setText(R.string.eceEmailSentText);
                             }
                         }else{
                             stopCounters();
