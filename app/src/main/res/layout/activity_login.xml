@@ -140,7 +140,8 @@
                     android:id="@+id/login_sign_up_btn"
                     android:layout_margin="5dp"
                     android:background="#00000000"
-                    android:text="New User? SIGN UP"
+                    android:text="New User? Sign Up"
+                    android:textAllCaps="false"
                     android:textColor="#000"/>
 
                 <com.shobhitpuri.custombuttons.GoogleSignInButton
